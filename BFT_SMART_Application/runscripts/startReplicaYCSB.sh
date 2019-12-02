@@ -16,4 +16,4 @@
 
 REPLICA_INDEX=$1
 
-java -cp bin/:lib/* bftsmart.demo.ycsb.YCSBServer $REPLICA_INDEX
+java -cp bin/:lib/* bftsmart.app.ycsb.YCSBServer $REPLICA_INDEX

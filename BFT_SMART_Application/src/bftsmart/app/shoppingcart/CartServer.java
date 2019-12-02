@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package bftsmart.demo.bftmap;
+package bftsmart.app.shoppingcart;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -36,30 +36,29 @@ import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;
 
 /**
  *
- * @author sweta
- * 
+ * @Edited by Haoru
  * This class will create a ServiceReplica and will initialize
  * it with a implementation of Executable and Recoverable interfaces. 
  */
-public class BFTMapServer extends DefaultSingleRecoverable {
+public class CartServer extends DefaultSingleRecoverable {
 
-    MapOfMaps tableMap = null;
+    MapOfCarts cartMap = null;
     //ServiceReplica replica = null;
     //private ReplicaContext replicaContext;
 
     //The constructor passes the id of the server to the super class
-    public BFTMapServer(int id) {
+    public CartServer(int id) {
         
-        tableMap = new MapOfMaps();
+        cartMap = new MapOfCarts();
         new ServiceReplica(id, this, this);
     }
 
     public static void main(String[] args){
         if(args.length < 1) {
-            System.out.println("Use: java BFTMapServer <processId>");
+            System.out.println("Use: java CartServer <processId>");
             System.exit(-1);
         }
-        new BFTMapServer(Integer.parseInt(args[0]));
+        new CartServer(Integer.parseInt(args[0]));
     }
     
 
@@ -71,32 +70,33 @@ public class BFTMapServer extends DefaultSingleRecoverable {
             byte[] reply = null;
             int cmd = new DataInputStream(in).readInt();
             switch (cmd) {
+                //TODO: READ, READALL
                 //operations on the hashmap
-                case BFTMapRequestType.PUT:
+                case CartRequestType.PUT:
                     String tableName = new DataInputStream(in).readUTF();
                     String key = new DataInputStream(in).readUTF();
                     String value = new DataInputStream(in).readUTF();
                     byte[] valueBytes = value.getBytes();
                     System.out.println("Key received: " + key);
-                    byte[] ret = tableMap.addData(tableName, key, valueBytes);
+                    byte[] ret = cartMap.addProduct(tableName, key, valueBytes);
                     if (ret == null) {
 //                        System.out.println("Return is null, so there was no data before");
                         ret = new byte[0];
                     }
                     reply = valueBytes;
                     break;
-                case BFTMapRequestType.REMOVE:
+                case CartRequestType.REMOVE:
                     tableName = new DataInputStream(in).readUTF();
                     key = new DataInputStream(in).readUTF();
 //                    System.out.println("Key received: " + key);
-                    valueBytes = tableMap.removeEntry(tableName, key);
+                    valueBytes = cartMap.removeEntry(tableName, key);
                     value = new String(valueBytes);
                     System.out.println("Value removed is : " + value);
                     out = new ByteArrayOutputStream();
                     new DataOutputStream(out).writeBytes(value);
                     reply = out.toByteArray();
                     break;
-                case BFTMapRequestType.TAB_CREATE:
+                case CartRequestType.CART_CREATE:
                     tableName = new DataInputStream(in).readUTF();
                     //ByteArrayInputStream in1 = new ByteArrayInputStream(command);
                     ObjectInputStream objIn = new ObjectInputStream(in);
@@ -104,9 +104,9 @@ public class BFTMapServer extends DefaultSingleRecoverable {
                     try {
                         table = (Map<String, byte[]>) objIn.readObject();
                     } catch (ClassNotFoundException ex) {
-                        Logger.getLogger(BFTMapServer.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(CartServer.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                    Map<String, byte[]> tableCreated = tableMap.addTable(tableName, table);
+                    Map<String, byte[]> tableCreated = cartMap.addCart(tableName, table);
                     ByteArrayOutputStream bos = new ByteArrayOutputStream();
                     ObjectOutputStream objOut = new ObjectOutputStream(bos);
                     objOut.writeObject(tableCreated);
@@ -114,9 +114,9 @@ public class BFTMapServer extends DefaultSingleRecoverable {
                     in.close();
                     reply = bos.toByteArray();
                     break;
-                case BFTMapRequestType.TAB_REMOVE:
+                case CartRequestType.CART_REMOVE:
                     tableName = new DataInputStream(in).readUTF();
-                    table = tableMap.removeTable(tableName);
+                    table = cartMap.removeCart(tableName);
                     bos = new ByteArrayOutputStream();
                     objOut = new ObjectOutputStream(bos);
                     objOut.writeObject(table);
@@ -124,48 +124,65 @@ public class BFTMapServer extends DefaultSingleRecoverable {
                     objOut.close();
                     reply = bos.toByteArray();
                     break;
-
-            
-                case BFTMapRequestType.SIZE_TABLE:
-                    int size1 = tableMap.getNumOfTables();
-//                    System.out.println("Size " + size1);
+                case CartRequestType.SIZE_CART:
+                    int size1 = cartMap.getNumOfCarts();
+                    System.out.println("Size of cart map: " + size1);
                     out = new ByteArrayOutputStream();
                     new DataOutputStream(out).writeInt(size1);
                     reply = out.toByteArray();
                     break;
-                case BFTMapRequestType.GET:
+                case CartRequestType.GET:
                     tableName = new DataInputStream(in).readUTF();
                     System.out.println("tablename: " + tableName);
                     key = new DataInputStream(in).readUTF();
 //                    System.out.println("Key received: " + key);
-                    valueBytes = tableMap.getEntry(tableName, key);
+                    valueBytes = cartMap.getEntry(tableName, key);
                     value = new String(valueBytes);
                     System.out.println("The value to be get is: " + value);
                     out = new ByteArrayOutputStream();
                     new DataOutputStream(out).writeBytes(value);
                     reply = out.toByteArray();
                     break;
-                case BFTMapRequestType.SIZE:
+                case CartRequestType.SIZE:
                     String tableName2 = new DataInputStream(in).readUTF();
-                    int size = tableMap.getSize(tableName2);
+                    int size = cartMap.getSize(tableName2);
                     out = new ByteArrayOutputStream();
                     new DataOutputStream(out).writeInt(size);
                     reply = out.toByteArray();
                     break;
-	            case BFTMapRequestType.CHECK:
+                case CartRequestType.READ: //newly added read
+                    tableName = new DataInputStream(in).readUTF();
+                    System.out.println("tablename: " + tableName);
+//                    System.out.println("Name received: " + tableName);
+                    Map<String,byte[]> map = cartMap.getCart(tableName);
+                    value = "";
+                    for (String k : map.keySet())
+                    {
+                        value += map.get(k) + " \n";
+                    }
+
+                    System.out.println("The value to be get is: " + value);
+                    out = new ByteArrayOutputStream();
+                    new DataOutputStream(out).writeBytes(value);
+                    reply = out.toByteArray();
+                    break;
+
+	            case CartRequestType.CHECK:
+                    System.out.println("CHECK here 1");
 	                tableName = new DataInputStream(in).readUTF();
 	                key = new DataInputStream(in).readUTF();
-//	                System.out.println("Table Key received: " + key);
-	                valueBytes = tableMap.getEntry(tableName, key);
+  	                System.out.println("Table Key received: " + key);
+	                valueBytes = cartMap.getEntry(tableName, key);
 	                boolean entryExists = valueBytes != null;
 	                out = new ByteArrayOutputStream();
 	                new DataOutputStream(out).writeBoolean(entryExists);
 	                reply = out.toByteArray();
 	                break;
-			    case BFTMapRequestType.TAB_CREATE_CHECK:
+			    case CartRequestType.CART_CREATE_CHECK:
+                    System.out.println("CART_CREATE_CHECK here 1");
 			        tableName = new DataInputStream(in).readUTF();
-//			        System.out.println("Table of Table Key received: " + tableName);
-			        table = tableMap.getTable(tableName);
+			        System.out.println("Table of Table Key received: " + tableName);
+			        table = cartMap.getCart(tableName);
 			        boolean tableExists = (table != null);
 			        System.out.println("Table exists: " + tableExists);
 			        out = new ByteArrayOutputStream();
@@ -175,7 +192,7 @@ public class BFTMapServer extends DefaultSingleRecoverable {
             }
             return reply;
         } catch (IOException ex) {
-            Logger.getLogger(BFTMapServer.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(CartServer.class.getName()).log(Level.SEVERE, null, ex);
             return null;
         }
     }
@@ -188,47 +205,49 @@ public class BFTMapServer extends DefaultSingleRecoverable {
 	        byte[] reply = null;
 	        int cmd = new DataInputStream(in).readInt();
 	        switch (cmd) {
-                case BFTMapRequestType.SIZE_TABLE:
-                    int size1 = tableMap.getNumOfTables();
+                case CartRequestType.SIZE_CART:
+                    int size1 = cartMap.getNumOfCarts();
 //                    System.out.println("Size " + size1);
                     out = new ByteArrayOutputStream();
                     new DataOutputStream(out).writeInt(size1);
                     reply = out.toByteArray();
                     break;
-                case BFTMapRequestType.GET:
+                case CartRequestType.GET:
                     String tableName = new DataInputStream(in).readUTF();
                     System.out.println("tablename: " + tableName);
                     String key = new DataInputStream(in).readUTF();
 //                    System.out.println("Key received: " + key);
-                    byte[] valueBytes = tableMap.getEntry(tableName, key);
+                    byte[] valueBytes = cartMap.getEntry(tableName, key);
                     String value = new String(valueBytes);
                     System.out.println("The value to be get is: " + value);
                     out = new ByteArrayOutputStream();
                     new DataOutputStream(out).writeBytes(value);
                     reply = out.toByteArray();
                     break;
-                case BFTMapRequestType.SIZE:
+                case CartRequestType.SIZE:
                     String tableName2 = new DataInputStream(in).readUTF();
-                    int size = tableMap.getSize(tableName2);
+                    int size = cartMap.getSize(tableName2);
 //                    System.out.println("Size " + size);
                     out = new ByteArrayOutputStream();
                     new DataOutputStream(out).writeInt(size);
                     reply = out.toByteArray();
                     break;
-	            case BFTMapRequestType.CHECK:
+	            case CartRequestType.CHECK:
+                    System.out.println("CHECK 2");
 	                tableName = new DataInputStream(in).readUTF();
 	                key = new DataInputStream(in).readUTF();
-//	                System.out.println("Table Key received: " + key);
-	                valueBytes = tableMap.getEntry(tableName, key);
+	                System.out.println("Table Key received: " + key);
+	                valueBytes = cartMap.getEntry(tableName, key);
 	                boolean entryExists = valueBytes != null;
 	                out = new ByteArrayOutputStream();
 	                new DataOutputStream(out).writeBoolean(entryExists);
 	                reply = out.toByteArray();
 	                break;
-			    case BFTMapRequestType.TAB_CREATE_CHECK:
+			    case CartRequestType.CART_CREATE_CHECK:
+                    System.out.println("CART_CREATE_CHECK here 2");
 			        tableName = new DataInputStream(in).readUTF();
-//			        System.out.println("Table of Table Key received: " + tableName);
-			        Map<String, byte[]> table = tableMap.getTable(tableName);
+			        System.out.println("Table of Table Key received: " + tableName);
+			        Map<String, byte[]> table = cartMap.getCart(tableName);
 			        boolean tableExists = (table != null);
 			        System.out.println("Table exists: " + tableExists);
 			        out = new ByteArrayOutputStream();
@@ -238,7 +257,7 @@ public class BFTMapServer extends DefaultSingleRecoverable {
 	        }
 	        return reply;
 	    } catch (IOException ex) {
-	        Logger.getLogger(BFTMapServer.class.getName()).log(Level.SEVERE, null, ex);
+	        Logger.getLogger(CartServer.class.getName()).log(Level.SEVERE, null, ex);
 	        return null;
 	    }
     }
@@ -248,14 +267,14 @@ public class BFTMapServer extends DefaultSingleRecoverable {
         try {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             ObjectOutput out = new ObjectOutputStream(bos);
-            out.writeObject(tableMap);
+            out.writeObject(cartMap);
             out.flush();
             bos.flush();
             out.close();
             bos.close();
             return bos.toByteArray();
         } catch (IOException ex) {
-            Logger.getLogger(BFTMapServer.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(CartServer.class.getName()).log(Level.SEVERE, null, ex);
             return new byte[0];
         }   
     }
@@ -267,14 +286,14 @@ public class BFTMapServer extends DefaultSingleRecoverable {
             // serialize to byte array and return
             ByteArrayInputStream bis = new ByteArrayInputStream(state);
             ObjectInput in = new ObjectInputStream(bis);
-            tableMap = (MapOfMaps) in.readObject();
+            cartMap = (MapOfCarts) in.readObject();
             in.close();
             bis.close();
 
         } catch (ClassNotFoundException ex) {
-            Logger.getLogger(BFTMapServer.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(CartServer.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
-            Logger.getLogger(BFTMapServer.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(CartServer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 

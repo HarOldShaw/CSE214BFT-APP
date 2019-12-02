@@ -13,19 +13,23 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package bftsmart.demo.listvalue;
+package bftsmart.app.shoppingcart;
 
-public class LVRequestType {
+public class CartRequestType {
 
-	static final int LIST_CREATE = 1;
-	static final int LIST_REMOVE = 2;
-	static final int SIZE_TABLE = 3;
+	static final int READALL = 0; //new
+	static final int CART_CREATE = 1;
+	static final int CART_REMOVE = 2;
+	static final int SIZE_CART = 3;
 	static final int PUT = 4;
 	static final int GET = 5;
 	static final int SIZE = 6;
 	static final int REMOVE = 7;
-	static final int CHECK = 8;
-	static final int GET_LIST = 9;
-	static final int LIST_CREATE_CHECK = 10;
+	static final int READ = 8;
+	static final int EXIT = 9;
+	static final int CHECK = 10;
+	static final int CART_CREATE_CHECK = 11;
+//	static final int GET_TABLE = 9;
+
 
 }

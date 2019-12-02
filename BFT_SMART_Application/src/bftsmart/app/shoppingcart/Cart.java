@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package bftsmart.demo.bftmap;
+package bftsmart.app.shoppingcart;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -34,54 +34,58 @@ import java.util.Map;
 import bftsmart.tom.ServiceProxy;
 
 /**
- * Map implementation backed by a BFT replicated table.
- * 
- * @author sweta
+ * Cart implemented by the Map and BFT
  */
-public class BFTMap implements Map<String, Map<String,byte[]>> {
+public class Cart implements Map<String, Map<String,byte[]>> {
 
 	ServiceProxy KVProxy = null;
-        
-	public BFTMap(int id) {
+
+	public Cart(int id) {
 		KVProxy = new ServiceProxy(id, "config");
 	}
 	ByteArrayOutputStream out = null;
 
+//	public String test(){
+//		return "yes!";
+//	}
+
+
 	@SuppressWarnings("unchecked")
-	public Map<String,byte[]> get(String tableName) {
+	public Map<String,byte[]> get(String cartName) {
 		try {
 			out = new ByteArrayOutputStream();
-			DataOutputStream dos = new DataOutputStream(out); 
-			dos.writeInt(BFTMapRequestType.GET);
-			dos.writeUTF(tableName);
-
-			byte[] rep = KVProxy.invokeUnordered(out.toByteArray());
+			DataOutputStream dos = new DataOutputStream(out);
+//			dos.writeInt(BFTMapRequestType.GET);
+			dos.writeInt(CartRequestType.READ);
+			dos.writeUTF(cartName);
+			byte[] rep = KVProxy.invokeUnordered(out.toByteArray());//reply
+//			System.out.println("reply: "+new String(rep));
 			ByteArrayInputStream bis = new ByteArrayInputStream(rep) ;
 			ObjectInputStream in = new ObjectInputStream(bis) ;
-			Map<String,byte[]> table = (Map<String,byte[]>) in.readObject();
+			Map<String,byte[]> cart = (Map<String,byte[]>) in.readObject();
 			in.close();
-			return table;
+			return cart;
 		} catch (ClassNotFoundException ex) {
-			Logger.getLogger(BFTMap.class.getName()).log(Level.SEVERE, null, ex);
+			Logger.getLogger(Cart.class.getName()).log(Level.SEVERE, null, ex);
 			return null;
 		} catch (IOException ex) {
-			Logger.getLogger(BFTMap.class.getName()).log(Level.SEVERE, null, ex);
+			Logger.getLogger(Cart.class.getName()).log(Level.SEVERE, null, ex);
 			return null;
 		}
-
 	}
 
-	public byte[] getEntry(String tableName,String key) {
+
+	public byte[] getEntry(String cartName,String key) {
 		try {
 			out = new ByteArrayOutputStream();
-			DataOutputStream dos = new DataOutputStream(out); 
-			dos.writeInt(BFTMapRequestType.GET);
-			dos.writeUTF(tableName);
+			DataOutputStream dos = new DataOutputStream(out);
+			dos.writeInt(CartRequestType.GET);
+			dos.writeUTF(cartName);
 			dos.writeUTF(key);
 			byte[] rep = KVProxy.invokeUnordered(out.toByteArray());
 			return rep;
 		} catch (IOException ex) {
-			Logger.getLogger(BFTMap.class.getName()).log(Level.SEVERE, null, ex);
+			Logger.getLogger(Cart.class.getName()).log(Level.SEVERE, null, ex);
 			return null;
 		}
 	}
@@ -90,8 +94,8 @@ public class BFTMap implements Map<String, Map<String,byte[]>> {
 	public Map<String,byte[]> put(String key, Map<String,byte[]> value) {
 		try {
 			out = new ByteArrayOutputStream();
-			DataOutputStream dos = new DataOutputStream(out); 
-			dos.writeInt(BFTMapRequestType.TAB_CREATE);
+			DataOutputStream dos = new DataOutputStream(out);
+			dos.writeInt(CartRequestType.CART_CREATE);
 			dos.writeUTF(key);
 			//ByteArrayOutputStream bos = new ByteArrayOutputStream() ;
 			ObjectOutputStream  out1 = new ObjectOutputStream(out) ;
@@ -100,34 +104,34 @@ public class BFTMap implements Map<String, Map<String,byte[]>> {
 			byte[] rep = KVProxy.invokeOrdered(out.toByteArray());
 			ByteArrayInputStream bis = new ByteArrayInputStream(rep) ;
 			ObjectInputStream in = new ObjectInputStream(bis) ;
-			Map<String,byte[]> table = (Map<String,byte[]>) in.readObject();
+			Map<String,byte[]> cart = (Map<String,byte[]>) in.readObject();
 			in.close();
-			return table;
+			return cart;
 
 		} catch (ClassNotFoundException ex) {
 			ex.printStackTrace();
-			Logger.getLogger(BFTMap.class.getName()).log(Level.SEVERE, null, ex);
+			Logger.getLogger(Cart.class.getName()).log(Level.SEVERE, null, ex);
 			return null;
 		} catch (IOException ex) {
 			ex.printStackTrace();
-			Logger.getLogger(BFTMap.class.getName()).log(Level.SEVERE, null, ex);
+			Logger.getLogger(Cart.class.getName()).log(Level.SEVERE, null, ex);
 			return null;
 		}
 	}
 
-	public byte[] putEntry(String tableName, String key, byte[] value) {
+	public byte[] putEntry(String cartName, String key, byte[] value) {
 		try {
 			out = new ByteArrayOutputStream();
-			DataOutputStream dos = new DataOutputStream(out); 
-			dos.writeInt(BFTMapRequestType.PUT);
-			dos.writeUTF(tableName);
+			DataOutputStream dos = new DataOutputStream(out);
+			dos.writeInt(CartRequestType.PUT);
+			dos.writeUTF(cartName);
 			dos.writeUTF(key);
 			dos.writeUTF(new String(value));
 			byte[] rep = KVProxy.invokeOrdered(out.toByteArray());
 			return rep;
 		} catch (IOException ex) {
 			ex.printStackTrace();
-			Logger.getLogger(BFTMap.class.getName()).log(Level.SEVERE, null, ex);
+			Logger.getLogger(Cart.class.getName()).log(Level.SEVERE, null, ex);
 			return null;
 		}
 
@@ -137,37 +141,37 @@ public class BFTMap implements Map<String, Map<String,byte[]>> {
 	public Map<String,byte[]> remove(Object key) {
 		try {
 			out = new ByteArrayOutputStream();
-			DataOutputStream dos = new DataOutputStream(out); 
-			dos.writeInt(BFTMapRequestType.TAB_REMOVE);
+			DataOutputStream dos = new DataOutputStream(out);
+			dos.writeInt(CartRequestType.CART_REMOVE);
 			dos.writeUTF((String) key);
 			byte[] rep = KVProxy.invokeOrdered(out.toByteArray());
 
 			ByteArrayInputStream bis = new ByteArrayInputStream(rep) ;
 			ObjectInputStream in = new ObjectInputStream(bis) ;
-			Map<String,byte[]> table = (Map<String,byte[]>) in.readObject();
+			Map<String,byte[]> cart = (Map<String,byte[]>) in.readObject();
 			in.close();
-			return table;
+			return cart;
 		} catch (ClassNotFoundException ex) {
-			Logger.getLogger(BFTMap.class.getName()).log(Level.SEVERE, null, ex);
+			Logger.getLogger(Cart.class.getName()).log(Level.SEVERE, null, ex);
 			return null;
 		} catch (IOException ex) {
-			Logger.getLogger(BFTMap.class.getName()).log(Level.SEVERE, null, ex);
+			Logger.getLogger(Cart.class.getName()).log(Level.SEVERE, null, ex);
 			return null;
 		}
 
 	}
 
-	public byte[] removeEntry(String tableName,String key)  {
+	public byte[] removeEntry(String cartName,String key)  {
 		try {
 			out = new ByteArrayOutputStream();
-			DataOutputStream dos = new DataOutputStream(out); 
-			dos.writeInt(BFTMapRequestType.REMOVE);
-			dos.writeUTF((String) tableName);
+			DataOutputStream dos = new DataOutputStream(out);
+			dos.writeInt(CartRequestType.REMOVE);
+			dos.writeUTF((String) cartName);
 			dos.writeUTF((String) key);
 			byte[] rep = KVProxy.invokeOrdered(out.toByteArray());
 			return rep;
 		} catch (IOException ex) {
-			Logger.getLogger(BFTMap.class.getName()).log(Level.SEVERE, null, ex);
+			Logger.getLogger(Cart.class.getName()).log(Level.SEVERE, null, ex);
 			return null;
 		}
 
@@ -175,31 +179,31 @@ public class BFTMap implements Map<String, Map<String,byte[]>> {
 	public int size() {
 		try {
 			out = new ByteArrayOutputStream();
-			new DataOutputStream(out).writeInt(BFTMapRequestType.SIZE_TABLE);
+			new DataOutputStream(out).writeInt(CartRequestType.SIZE_CART);
 			byte[] rep;
 			rep = KVProxy.invokeUnordered(out.toByteArray());
 			ByteArrayInputStream in = new ByteArrayInputStream(rep);
 			int size = new DataInputStream(in).readInt();
 			return size;
 		} catch (IOException ex) {
-			Logger.getLogger(BFTMap.class.getName()).log(Level.SEVERE, null, ex);
+			Logger.getLogger(Cart.class.getName()).log(Level.SEVERE, null, ex);
 			return -1;
 		}
 	}
 
-	public int size1(String tableName) {
+	public int size1(String cartName) {
 		try {
 			out = new ByteArrayOutputStream();
-			DataOutputStream dos = new DataOutputStream(out); 
-			dos.writeInt(BFTMapRequestType.SIZE);
-			dos.writeUTF(tableName);
+			DataOutputStream dos = new DataOutputStream(out);
+			dos.writeInt(CartRequestType.SIZE);
+			dos.writeUTF(cartName);
 			byte[] rep;
 			rep = KVProxy.invokeUnordered(out.toByteArray());
 			ByteArrayInputStream in = new ByteArrayInputStream(rep);
 			int size = new DataInputStream(in).readInt();
 			return size;
 		} catch (IOException ex) {
-			Logger.getLogger(BFTMap.class.getName()).log(Level.SEVERE, null, ex);
+			Logger.getLogger(Cart.class.getName()).log(Level.SEVERE, null, ex);
 			return 0;
 		}
 	}
@@ -207,28 +211,29 @@ public class BFTMap implements Map<String, Map<String,byte[]>> {
 	public boolean containsKey(String key) {
 		try {
 			out = new ByteArrayOutputStream();
-			DataOutputStream dos = new DataOutputStream(out); 
-			dos.writeInt(BFTMapRequestType.TAB_CREATE_CHECK);
+			DataOutputStream dos = new DataOutputStream(out);
+			dos.writeInt(CartRequestType.CART_CREATE_CHECK);
 			dos.writeUTF((String) key);
-			byte[] rep;
+			byte[] rep; //rep is null
 			rep = KVProxy.invokeUnordered(out.toByteArray());
+			System.out.println("rep: " + rep);
 			ByteArrayInputStream in = new ByteArrayInputStream(rep);
 			boolean res = new DataInputStream(in).readBoolean();
 			return res;
 		} catch (IOException ex) {
 			ex.printStackTrace();
-			Logger.getLogger(BFTMap.class.getName()).log(Level.SEVERE, null, ex);
+			Logger.getLogger(Cart.class.getName()).log(Level.SEVERE, null, ex);
 			return false;
 		}
 
 	}
 
-	public boolean containsKey1(String tableName, String key) {
+	public boolean containsKey1(String cartName, String key) {
 		try {
 			out = new ByteArrayOutputStream();
-			DataOutputStream dos = new DataOutputStream(out); 
-			dos.writeInt(BFTMapRequestType.CHECK);
-			dos.writeUTF((String) tableName);
+			DataOutputStream dos = new DataOutputStream(out);
+			dos.writeInt(CartRequestType.CHECK);
+			dos.writeUTF((String) cartName);
 			dos.writeUTF((String) key);
 			byte[] rep;
 			rep = KVProxy.invokeUnordered(out.toByteArray());
@@ -236,7 +241,7 @@ public class BFTMap implements Map<String, Map<String,byte[]>> {
 			boolean res = new DataInputStream(in).readBoolean();
 			return res;
 		} catch (IOException ex) {
-			Logger.getLogger(BFTMap.class.getName()).log(Level.SEVERE, null, ex);
+			Logger.getLogger(Cart.class.getName()).log(Level.SEVERE, null, ex);
 			return false;
 		}
 	}
