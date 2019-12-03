@@ -49,22 +49,42 @@ public class Cart implements Map<String, Map<String,byte[]>> {
 //		return "yes!";
 //	}
 
-
+	//TODO solve rep null exception
 	@SuppressWarnings("unchecked")
-	public Map<String,byte[]> get(String cartName) {
+//	public Map<String,byte[]> read(String cartName) {
+////		try {
+////			out = new ByteArrayOutputStream();
+////			DataOutputStream dos = new DataOutputStream(out);
+////			dos.writeInt(CartRequestType.READ);
+////			dos.writeUTF(cartName);
+////			byte[] rep = KVProxy.invokeUnordered(out.toByteArray());//reply
+////			ByteArrayInputStream bis = new ByteArrayInputStream(rep) ;
+////			ObjectInputStream in = new ObjectInputStream(bis) ;
+////			Map<String,byte[]> cart = (Map<String,byte[]>) in.readObject();
+////			in.close();
+////			return cart;
+////		} catch (ClassNotFoundException ex) {
+////			Logger.getLogger(Cart.class.getName()).log(Level.SEVERE, null, ex);
+////			return null;
+////		} catch (IOException ex) {
+////			Logger.getLogger(Cart.class.getName()).log(Level.SEVERE, null, ex);
+////			return null;
+////		}
+////	}
+
+	public Map<String,byte[]> read(String cartName) {
 		try {
 			out = new ByteArrayOutputStream();
 			DataOutputStream dos = new DataOutputStream(out);
-//			dos.writeInt(BFTMapRequestType.GET);
 			dos.writeInt(CartRequestType.READ);
 			dos.writeUTF(cartName);
-			byte[] rep = KVProxy.invokeUnordered(out.toByteArray());//reply
-//			System.out.println("reply: "+new String(rep));
+			byte[] rep = KVProxy.invokeOrdered(out.toByteArray());
+//			System.out.println("rep from server: "+ new String(rep));
 			ByteArrayInputStream bis = new ByteArrayInputStream(rep) ;
 			ObjectInputStream in = new ObjectInputStream(bis) ;
-			Map<String,byte[]> cart = (Map<String,byte[]>) in.readObject();
+			Map<String,byte[]> content = (Map<String,byte[]>) in.readObject();
 			in.close();
-			return cart;
+			return content;
 		} catch (ClassNotFoundException ex) {
 			Logger.getLogger(Cart.class.getName()).log(Level.SEVERE, null, ex);
 			return null;
@@ -73,7 +93,6 @@ public class Cart implements Map<String, Map<String,byte[]>> {
 			return null;
 		}
 	}
-
 
 	public byte[] getEntry(String cartName,String key) {
 		try {
@@ -145,7 +164,7 @@ public class Cart implements Map<String, Map<String,byte[]>> {
 			dos.writeInt(CartRequestType.CART_REMOVE);
 			dos.writeUTF((String) key);
 			byte[] rep = KVProxy.invokeOrdered(out.toByteArray());
-
+			System.out.println("remove object rep: "+new String(rep)); //test
 			ByteArrayInputStream bis = new ByteArrayInputStream(rep) ;
 			ObjectInputStream in = new ObjectInputStream(bis) ;
 			Map<String,byte[]> cart = (Map<String,byte[]>) in.readObject();
@@ -214,9 +233,8 @@ public class Cart implements Map<String, Map<String,byte[]>> {
 			DataOutputStream dos = new DataOutputStream(out);
 			dos.writeInt(CartRequestType.CART_CREATE_CHECK);
 			dos.writeUTF((String) key);
-			byte[] rep; //rep is null
+			byte[] rep; // Exception: rep is null
 			rep = KVProxy.invokeUnordered(out.toByteArray());
-			System.out.println("rep: " + rep);
 			ByteArrayInputStream in = new ByteArrayInputStream(rep);
 			boolean res = new DataInputStream(in).readBoolean();
 			return res;
@@ -282,6 +300,7 @@ public class Cart implements Map<String, Map<String,byte[]>> {
 	}
 
 	public TreeMap<String, byte[]> get(Object key) {
+		System.out.println("not supported");
 		throw new UnsupportedOperationException("Not supported yet.");
 	}
 
