@@ -34,7 +34,8 @@ import java.util.Map;
 import bftsmart.tom.ServiceProxy;
 
 /**
- * Cart implemented by the Map and BFT
+ * @Editor; Haoru, Yao
+ * @description: implement functions provided by the Cart Object
  */
 public class Cart implements Map<String, Map<String,byte[]>> {
 

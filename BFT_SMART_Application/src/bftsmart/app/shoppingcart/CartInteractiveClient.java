@@ -13,6 +13,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
+/**
+ * @Editor; Haoru
+ * @description: the User Interface for manipulating the database
+ */
+
 package bftsmart.app.shoppingcart;
 
 import java.io.IOException;
@@ -23,10 +29,6 @@ import java.util.InputMismatchException;
 import java.io.Console;
 import java.util.TreeMap;
 
-/**
- *
- * @Editted by Haoru
- */
 public class CartInteractiveClient {
 
 
@@ -80,7 +82,7 @@ public class CartInteractiveClient {
 						Map<String, byte[]> tmp = cart.read(k1);
 						System.out.println(">>> Cart: " + k1);
 						for (String k2 : tmp.keySet()) {
-							System.out.println("key: " + k2 + ", value: " + new String(tmp.get(k2)));
+							System.out.println("product key: " + k2 + ", quantity: " + new String(tmp.get(k2)));
 						}
 						System.out.println();
 					}
@@ -99,14 +101,14 @@ public class CartInteractiveClient {
 					System.out.println("cart name: "+ cartName);
 					if (!cartExists) {
 						//if the table name does not exist then print the error message
-						System.out.println("cart Doest not exists");
+						System.out.println("cart does not exists");
 					}else{
 //						System.out.println("here");
 						Map<String,byte[]> res = cart.read(cartName);
 						System.out.println("-------------------------------------------");
 						System.out.println("cart content of "+ cartName);
 						for(String k: res.keySet()){
-							System.out.println("key: "+k + ", value: "+new String(res.get(k)));
+							System.out.println("product key: "+ k + ", quantity: "+new String(res.get(k)));
 						}
 						System.out.println("-------------------------------------------");
 						cartExists = true;
@@ -117,14 +119,15 @@ public class CartInteractiveClient {
 				//Remove the table entry
 				cartExists = false;
 				cartName = null;
-				System.out.println("Removing table");
-				cartName = console.readLine("Enter the valid table name you want to remove: ");
+				System.out.println("Removing cart");
+				cartName = console.readLine("Enter the valid cart name you want to remove: ");
 				cartExists = cart.containsKey(cartName);
 				if(cartExists) {
 					Map<String,byte[]> map = cart.remove(cartName);
-					System.out.println("Table removed: " + map.keySet());
+
+					System.out.println("Cart removed: " + map.keySet());
 				} else
-					System.out.println("Table not found");
+					System.out.println("Cart not found");
 				break;
 				//operations on the table
 			case CartRequestType.CART_CREATE:
@@ -142,10 +145,10 @@ public class CartInteractiveClient {
 				break;
 
 			case CartRequestType.SIZE_CART:
-				//obtain the size of the table of tables.
-				System.out.println("Computing the size of the table");
+				//obtain the size of the carts of database.
+				System.out.println("Computing the size of the database");
 				int size = cart.size();
-				System.out.println("The size of the table of tables is: "+size);
+				System.out.println("The size of the database is: "+size);
 				break;
 
 				//operations on the hashmap
@@ -154,9 +157,9 @@ public class CartInteractiveClient {
 				cartExists = false;
 				cartName = null;
 				size = -1;
-				cartName = console.readLine("Enter the valid table name in which you want to insert data: ");
-				String key = console.readLine("Enter a numeric key for the new record in the range 0 to 9999: ");
-				String value = console.readLine("Enter the value for the new record: ");
+				cartName = console.readLine("Enter the valid cart name in which you want to insert data: ");
+				String key = console.readLine("Enter a numeric key for the new product in the range 0 to 9999: ");
+				String value = console.readLine("Enter the quantity for the new product: ");
 
 				byte[] resultBytes;
 				cartExists = cart.containsKey(cartName);
@@ -166,64 +169,60 @@ public class CartInteractiveClient {
 					byte[] byteArray = value.getBytes();
 					resultBytes = cart.putEntry(cartName, key, byteArray);
 				} else
-					System.out.println("Table not found");
+					System.out.println("Cart not found");
 				break;
 
 			case CartRequestType.GET:
-				System.out.println("Execute get function");
 				cartExists = false;
 				boolean keyExists = false;
 				cartName = null;
 				key = null;
-				cartName = console.readLine("Enter the valid table name from which you want to get the values: ");
+				cartName = console.readLine("Enter the valid cart name from which you want to get the quantity of product: ");
 				cartExists = cart.containsKey(cartName);
 				if (cartExists) {
-					key = console.readLine("Enter the key: ");
+					key = console.readLine("Enter the key of the product: ");
 					while(key.length() < 4)
 						key = "0" + key;
 					keyExists = cart.containsKey1(cartName, key);
 					if(keyExists) {
 						resultBytes = cart.getEntry(cartName,key);
-						System.out.println("The value received from GET is: " + new String(resultBytes));
+						System.out.println("The quantity of the product you request is: " + new String(resultBytes));
 					} else
-						System.out.println("Key not found");
+						System.out.println("product key not found");
 				} else
-					System.out.println("Table not found");
+					System.out.println("Cart not found");
 				break;
 
 			case CartRequestType.SIZE:
-				System.out.println("Execute get function");
 				cartExists = false;
 				cartName = null;
 				size = -1;
-				cartName = console.readLine("Enter the valid table whose size you want to detemine: ");
-
+				cartName = console.readLine("Enter the valid cart whose size you want to determine: ");
 				cartExists = cart.containsKey(cartName);
 				if (cartExists) {
 					size = cart.size1(cartName);
 					System.out.println("The size is: " + size);
 				} else {
-					System.out.println("Table not found");
+					System.out.println("Cart not found");
 				}
 				break;
 			case CartRequestType.REMOVE:
-				System.out.println("Execute get function");
 				cartExists = false;
 				keyExists = false;
 				cartName = null;
 				key = null;
-				cartName = console.readLine("Enter the table name from which you want to remove: ");
+				cartName = console.readLine("Enter the cart name from which you want to remove: ");
 				cartExists = cart.containsKey(cartName);
 				if(cartExists) {
-					key = console.readLine("Enter the valid key: ");
+					key = console.readLine("Enter the valid product id: ");
 					keyExists = cart.containsKey1(cartName, key);
 					if(keyExists) {
 						byte[] result2 = cart.removeEntry(cartName,key);
-						System.out.println("The previous value was : "+new String(result2));
+						System.out.println("The previous quantity of the product was : "+new String(result2));
 					} else
-						System.out.println("Key not found");
+						System.out.println("Product key not found");
 				} else
-					System.out.println("Table not found");
+					System.out.println("Cart not found");
 				break;
 			case CartRequestType.EXIT:
 				System.exit(-1);

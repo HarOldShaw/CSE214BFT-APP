@@ -21,9 +21,10 @@ import java.util.Map;
 import java.io.Serializable;
 
 /**
- *
- * @description: operations provided by the data strucutre
+ * @Editor; Haoru
+ * @description: Provide functions that can be used by the server to manipulate the database
  */
+
 public class MapOfCarts implements Serializable {
 	// key: cartName
 	// Value: Map<String product_id, byte[] amount>
