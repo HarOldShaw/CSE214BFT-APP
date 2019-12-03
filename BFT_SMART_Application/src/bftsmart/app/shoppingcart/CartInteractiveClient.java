@@ -38,28 +38,11 @@ public class CartInteractiveClient {
 
 		Cart cart = new Cart(Integer.parseInt(args[0]));
 //		System.out.println(cart.test());
-
 		Console console = System.console();
 		Scanner sc = new Scanner(System.in);
-		//TODO: DATA INITIALIZATION
 
 
 		while(true) {
-			//TODO: implement READ ALL
-//			System.out.println();
-//			System.out.println("---------------Select one of the commands ----------------");
-//			System.out.println("select a command : 0. READ CONTENTS OF ALL SHOPPING CARTS");
-//			System.out.println("select a command : 1. CREATE A NEW SHOPPING CART");
-//			System.out.println("select a command : 2. REMOVE AN EXISTING SHOPPING CART");
-//			System.out.println("select a command : 3. GET THE SIZE OF THE SHOPPING CART");
-//			System.out.println("select a command : 4. PUT VALUES INTO A TABLE");
-//			System.out.println("select a command : 5. GET VALUES FROM A TABLE");
-//			System.out.println("select a command : 6. GET THE SIZE OF A TABLE");
-//			System.out.println("select a command : 7. REMOVE AN EXISTING TABLE");
-//			System.out.println("select a command : 11. EXIT");
-//			System.out.println("---------------------------------------------------------");
-
-			System.out.println();
 			System.out.println("---------------Select one of the commands ----------------");
 			System.out.println("select a command : 0. GENERATE SHOPPING CART TABLE");
 			System.out.println("select a command : 1. CREATE A NEW SHOPPING CART");
@@ -71,6 +54,7 @@ public class CartInteractiveClient {
 			System.out.println("select a command : 7. REMOVE PRODUCT FROM A SHOPPING CART");
 			System.out.println("select a command : 8. READ CONTENT OF A SHOPPING CART");
 			System.out.println("select a command : 9. EXIT");
+			System.out.println("select a command : 10. Initialize Database");
 			System.out.println("----------------------------------------------------------");
 
 			int cmd = sc.nextInt();
@@ -78,11 +62,35 @@ public class CartInteractiveClient {
 			String cartName;
 			boolean cartExists;
 			switch(cmd) {
-			//TODO READALL
-			case CartRequestType.READALL:
-
+			case 10:
+				cart.dataInitialize(); //initalize data
 				break;
-			//TODO  like CART_REMOVE
+			case CartRequestType.READALL:
+				int sizeDB = cart.size();
+				if (sizeDB <= 0) {
+					// if not cart exists in the database
+					System.out.println("Database is empty");
+				}else{ // if there exist at least one cart in the database, print the content of the database;
+//						System.out.println("here");
+					Map<String, Map<String,byte[]>> db = cart.readAll();
+					System.out.println("Database Size: "+ sizeDB);
+					System.out.println("content of the database:");
+					System.out.println("-------------------------------------------------");
+					for(String k1 : db.keySet()) {
+						Map<String, byte[]> tmp = cart.read(k1);
+						System.out.println(">>> Cart: " + k1);
+						for (String k2 : tmp.keySet()) {
+							System.out.println("key: " + k2 + ", value: " + new String(tmp.get(k2)));
+						}
+						System.out.println();
+					}
+					// TODO printout the layout of the database;
+//					for(String k: res.keySet()){
+//						System.out.println("key: "+k + ", value: "+new String(res.get(k)));
+//					}
+					System.out.println("-------------------------------------------------");
+				}
+				break;
 			case CartRequestType.READ:
 				cartExists = false;
 				do {
@@ -103,23 +111,21 @@ public class CartInteractiveClient {
 						System.out.println("-------------------------------------------");
 						cartExists = true;
 					}
-				} while(cartExists);
+				} while(!cartExists);
 				break;
-
-				case CartRequestType.CART_REMOVE:
-					//Remove the table entry
-					cartExists = false;
-					cartName = null;
-					System.out.println("Removing table");
-					cartName = console.readLine("Enter the valid table name you want to remove: ");
-					cartExists = cart.containsKey(cartName);
-					if(cartExists) {
-						Map<String,byte[]> map = cart.remove(cartName);
-						System.out.println("Table removed: " + map.keySet());
-					} else
-						System.out.println("Table not found");
-					break;
-
+			case CartRequestType.CART_REMOVE:
+				//Remove the table entry
+				cartExists = false;
+				cartName = null;
+				System.out.println("Removing table");
+				cartName = console.readLine("Enter the valid table name you want to remove: ");
+				cartExists = cart.containsKey(cartName);
+				if(cartExists) {
+					Map<String,byte[]> map = cart.remove(cartName);
+					System.out.println("Table removed: " + map.keySet());
+				} else
+					System.out.println("Table not found");
+				break;
 				//operations on the table
 			case CartRequestType.CART_CREATE:
 				cartExists = false;

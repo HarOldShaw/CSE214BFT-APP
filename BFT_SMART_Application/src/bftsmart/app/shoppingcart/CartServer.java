@@ -67,18 +67,49 @@ public class CartServer extends DefaultSingleRecoverable {
         try {
             ByteArrayInputStream in = new ByteArrayInputStream(command);
             ByteArrayOutputStream out = null;
+            ObjectOutputStream objOut;
+            ByteArrayOutputStream bos;
+            String tableName, key, value;
             byte[] reply = null;
+            Map<String, Map<String, byte[]>>  db;
+            byte[] ret;
+            byte[] valueBytes;
+            Map<String, byte[]> table;
             int cmd = new DataInputStream(in).readInt();
             switch (cmd) {
                 //TODO: READ, READALL
                 //operations on the hashmap
+                case CartRequestType.READALL: //newly added read
+                    System.out.println("server readall request Ordered");
+                    db = cartMap.getDB();
+                    System.out.println("database retrieved, " + cartMap.getNumOfCarts() +" carts found");
+                    bos = new ByteArrayOutputStream();
+                    objOut = new ObjectOutputStream(bos);
+                    objOut.writeObject(db);
+                    objOut.close();
+                    objOut.close();
+                    reply = bos.toByteArray();
+                    break;
+                case CartRequestType.READ: //newly added read
+                    System.out.println("server read request Ordered");
+                    tableName = new DataInputStream(in).readUTF();
+                    System.out.println("tablename: " + tableName);
+                    table = cartMap.getCart(tableName);
+                    System.out.println("Order read cart -- table: " + table);
+                    bos = new ByteArrayOutputStream();
+                    objOut = new ObjectOutputStream(bos);
+                    objOut.writeObject(table);
+                    objOut.close();
+                    objOut.close();
+                    reply = bos.toByteArray();
+                    break;
                 case CartRequestType.PUT:
-                    String tableName = new DataInputStream(in).readUTF();
-                    String key = new DataInputStream(in).readUTF();
-                    String value = new DataInputStream(in).readUTF();
-                    byte[] valueBytes = value.getBytes();
+                    tableName = new DataInputStream(in).readUTF();
+                    key = new DataInputStream(in).readUTF();
+                    value = new DataInputStream(in).readUTF();
+                    valueBytes = value.getBytes();
                     System.out.println("Key received: " + key);
-                    byte[] ret = cartMap.addProduct(tableName, key, valueBytes);
+                    ret = cartMap.addProduct(tableName, key, valueBytes);
                     if (ret == null) {
 //                        System.out.println("Return is null, so there was no data before");
                         ret = new byte[0];
@@ -100,34 +131,20 @@ public class CartServer extends DefaultSingleRecoverable {
                     tableName = new DataInputStream(in).readUTF();
                     //ByteArrayInputStream in1 = new ByteArrayInputStream(command);
                     ObjectInputStream objIn = new ObjectInputStream(in);
-                    Map<String, byte[]> table = null;
+                    table = null;
                     try {
                         table = (Map<String, byte[]>) objIn.readObject();
                     } catch (ClassNotFoundException ex) {
                         Logger.getLogger(CartServer.class.getName()).log(Level.SEVERE, null, ex);
                     }
                     Map<String, byte[]> tableCreated = cartMap.addCart(tableName, table);
-                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                    ObjectOutputStream objOut = new ObjectOutputStream(bos);
+                    bos = new ByteArrayOutputStream();
+                    objOut = new ObjectOutputStream(bos);
                     objOut.writeObject(tableCreated);
                     objOut.close();
                     in.close();
                     reply = bos.toByteArray();
                     break;
-                case CartRequestType.READ: //newly added read
-                    System.out.println("server read request Ordered");
-                    tableName = new DataInputStream(in).readUTF();
-                    System.out.println("tablename: " + tableName);
-                    table = cartMap.getCart(tableName);
-                    System.out.println("Order read cart -- table: " + table);
-                    bos = new ByteArrayOutputStream();
-                    objOut = new ObjectOutputStream(bos);
-                    objOut.writeObject(table);
-                    objOut.close();
-                    objOut.close();
-                    reply = bos.toByteArray();
-                    break;
-
                 case CartRequestType.CART_REMOVE:
                     tableName = new DataInputStream(in).readUTF();
                     table = cartMap.removeCart(tableName);
@@ -201,7 +218,11 @@ public class CartServer extends DefaultSingleRecoverable {
 	        ByteArrayInputStream in = new ByteArrayInputStream(command);
 	        ByteArrayOutputStream out = null;
 	        byte[] reply = null;
-	        int cmd = new DataInputStream(in).readInt();
+            byte[] valueBytes;
+            Map<String,byte[]> map;
+            Map<String, byte[]> table;
+            String tableName, key, value;
+            int cmd = new DataInputStream(in).readInt();
 	        switch (cmd) {
                 case CartRequestType.SIZE_CART:
                     int size1 = cartMap.getNumOfCarts();
@@ -212,12 +233,12 @@ public class CartServer extends DefaultSingleRecoverable {
                     break;
 
                 case CartRequestType.GET:
-                    String tableName = new DataInputStream(in).readUTF();
+                    tableName = new DataInputStream(in).readUTF();
                     System.out.println("tablename: " + tableName);
-                    String key = new DataInputStream(in).readUTF();
+                    key = new DataInputStream(in).readUTF();
 //                    System.out.println("Key received: " + key);
-                    byte[] valueBytes = cartMap.getEntry(tableName, key);
-                    String value = new String(valueBytes);
+                    valueBytes = cartMap.getEntry(tableName, key);
+                    value = new String(valueBytes);
                     System.out.println("GET -- The value to be get is: " + value);
                     out = new ByteArrayOutputStream();
                     new DataOutputStream(out).writeBytes(value);
@@ -235,7 +256,7 @@ public class CartServer extends DefaultSingleRecoverable {
                     System.out.println("server read request Ordered");
                     tableName = new DataInputStream(in).readUTF();
                     System.out.println("tablename: " + tableName);
-                    Map<String,byte[]> map = cartMap.getCart(tableName);
+                    map = cartMap.getCart(tableName);
                     value = "";
                     for (String k : map.keySet())
                     {
@@ -263,7 +284,7 @@ public class CartServer extends DefaultSingleRecoverable {
                     System.out.println("CART_CREATE_CHECK here 2");
 			        tableName = new DataInputStream(in).readUTF();
 			        System.out.println("Table of Table Key received: " + tableName);
-			        Map<String, byte[]> table = cartMap.getCart(tableName);
+			        table = cartMap.getCart(tableName);
 			        boolean tableExists = (table != null);
 			        System.out.println("Table exists 2: " + tableExists);
 			        out = new ByteArrayOutputStream();

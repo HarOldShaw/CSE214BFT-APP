@@ -35,11 +35,9 @@ public class MapOfCarts implements Serializable {
 		cartMap=new TreeMap<String, Map<String,byte[]>>();
 	}
 
-
 	public Map<String,byte[]> addCart(String key, Map<String, byte[]> value) { //add new cart into the map
 		return cartMap.put(key, value);
 	}
-
 
 	public byte[] addProduct(String cartName, String key, byte[] value) { //add new product into the existing shopping cart
 		Map<String,byte[]> cart = cartMap.get(cartName);
@@ -54,6 +52,10 @@ public class MapOfCarts implements Serializable {
 	public Map<String,byte[]> getCart(String cartName) {
 		return cartMap.get(cartName);
 	} //get cart by its name
+
+	public Map<String, Map<String,byte[]>> getDB() {
+		return this.cartMap;
+	}
 
 	public byte[] getEntry(String cartName, String key) {
 		System.out.println("Cart name: "+cartName);

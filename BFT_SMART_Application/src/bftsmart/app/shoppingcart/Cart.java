@@ -22,7 +22,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Set;
-
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -49,28 +49,39 @@ public class Cart implements Map<String, Map<String,byte[]>> {
 //		return "yes!";
 //	}
 
-	//TODO solve rep null exception
+	String[] cartNames = new String[] {"shoes", "clothes", "electronics", "makeups", "games", "pets", "food"};
+	String[] keySet = new String[]{"0001", "0002", "0003", "0004", "0005"};
+	public void dataInitialize(){
+		Random random = new Random();
+		for(int i = 0; i<cartNames.length; i++){
+			put(cartNames[i], new TreeMap<String,byte[]>()); //Create cart
+			for(int j = 0; j<keySet.length; j++){
+				putEntry(cartNames[i], keySet[j], Integer.toString(random.nextInt(101)).getBytes()); //put value
+			}
+		}
+	}
+
 	@SuppressWarnings("unchecked")
-//	public Map<String,byte[]> read(String cartName) {
-////		try {
-////			out = new ByteArrayOutputStream();
-////			DataOutputStream dos = new DataOutputStream(out);
-////			dos.writeInt(CartRequestType.READ);
-////			dos.writeUTF(cartName);
-////			byte[] rep = KVProxy.invokeUnordered(out.toByteArray());//reply
-////			ByteArrayInputStream bis = new ByteArrayInputStream(rep) ;
-////			ObjectInputStream in = new ObjectInputStream(bis) ;
-////			Map<String,byte[]> cart = (Map<String,byte[]>) in.readObject();
-////			in.close();
-////			return cart;
-////		} catch (ClassNotFoundException ex) {
-////			Logger.getLogger(Cart.class.getName()).log(Level.SEVERE, null, ex);
-////			return null;
-////		} catch (IOException ex) {
-////			Logger.getLogger(Cart.class.getName()).log(Level.SEVERE, null, ex);
-////			return null;
-////		}
-////	}
+	public Map<String, Map<String,byte[]>> readAll() {
+		try {
+			out = new ByteArrayOutputStream();
+			DataOutputStream dos = new DataOutputStream(out);
+			dos.writeInt(CartRequestType.READALL);
+			byte[] rep = KVProxy.invokeOrdered(out.toByteArray());
+//			System.out.println("rep from server: "+ new String(rep));
+			ByteArrayInputStream bis = new ByteArrayInputStream(rep) ;
+			ObjectInputStream in = new ObjectInputStream(bis) ;
+			Map<String, Map<String,byte[]>> db = (Map<String, Map<String,byte[]>>) in.readObject();
+			in.close();
+			return db;
+		} catch (ClassNotFoundException ex) {
+			Logger.getLogger(Cart.class.getName()).log(Level.SEVERE, null, ex);
+			return null;
+		} catch (IOException ex) {
+			Logger.getLogger(Cart.class.getName()).log(Level.SEVERE, null, ex);
+			return null;
+		}
+	}
 
 	public Map<String,byte[]> read(String cartName) {
 		try {
